@@ -12,8 +12,8 @@
 pkgs <- c("ggplot2", "DJL")
 sapply(pkgs, require, character.only = T)
 
-# Load data & script
-load(url("http://webhard.skku.edu:8081/api.link/3d_baLkMErzCRPkD_cPv.RData"), verbose = F)
+# Load data
+load(url("http://webhard.skku.edu:8081/api.link/3d_baLkMErzHTPkM_cTv.RData"), verbose = F)
 
 
 ###############################################################################################
@@ -178,11 +178,12 @@ IU.annual.c <- c(df[,6, 2] - df[,6,1], df[,6, 3] - df[,6,2], df[,6, 4] - df[,6,3
 
 summary(lm(res.malm.raw$mi$MI ~ IU.annual.c), na.rm = T)
 
-# Figure 10. LPG vs LNG (vs Oil) prices (850*600)
+# Price long
 m.price <- data.frame(Tick  = rep(1:49, 3),
                       Price = c(price$Dubai_oil*10, price$LNG, price$LPG),
                       Type  = factor(rep(c("Oil", "LNG", "LPG"), each = 49), levels = c("Oil", "LNG", "LPG")))
 
+# Figure 10. LPG vs LNG (vs Oil) prices (850*600)
 ggplot(data = m.price, aes(x = Tick, y = Price, group = Type, colour = Type)) + 
   geom_line(size = 1.2) + theme_bw() + 
   scale_colour_manual(values = c("lightgrey", "royalblue", "orangered")) +
