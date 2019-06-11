@@ -1,30 +1,31 @@
-###############################################################################################
+#########################################################################################################################
 ### Project  : A slack based Malmquist productivity analysis of the city gas industry in Korea
 ### Script   : Gas_on_GIT.R
 ### Contents : SBM based Malmquist Index analysis on 33 Korean Gas Providers
-###############################################################################################
+#########################################################################################################################
 
-###############################################################################################
+#########################################################################################################################
 ### Setting up Environment
-###############################################################################################
+#########################################################################################################################
 
 # Load library
 pkgs <- c("ggplot2", "DJL")
 sapply(pkgs, require, character.only = T)
 
 # Load data & parameters
+price <- read.csv(url("http://bit.ly/2AGUUSF"), header = T)
 df.2d <- read.csv(url("http://bit.ly/2VMTUFo"), header = T)
 df.3d <- simplify2array(by(df.2d[,-c(1:3)], df.2d$Year, as.matrix))
 id.x  <- 1:3 #  in: pipe & employee & cost
 id.y  <- 4:5 # out: supply & household
-f.t   <- 2007:2017
+f.t   <- unique(df.2d$Year)
 name  <- df.2d$Name[1:33]
 loc   <- df.2d$Location[1:33]
 
 
-###############################################################################################
+#########################################################################################################################
 ### Descriptive Statistics
-###############################################################################################
+#########################################################################################################################
 
 # Stats averaged
 df.avg <- data.frame(rowMeans(df.3d[,-6,], dims = 2),
@@ -45,20 +46,21 @@ ggplot(df.avg, aes(reorder(name, IU), IU, fill = Loc)) +
                 y     = IU, color = Loc), size = 4, 
             position  = position_dodge(width = 0.8), vjust = 0.35, hjust = -0.1) + coord_flip()
 
-# Figure 2.1. The total supply and the number of household per pipe length (800*600)
+# Figure 2. The total supply and the number of household per pipe length (800*600)
 ggplot(df.avg, aes(x = SP/PP, y = HH/PP, color = Loc, label = name)) + 
   geom_point(aes(size = IU)) + scale_size(guide = "none") + 
   geom_text(vjust = 1.5, show.legend = F) + theme_bw() + 
   scale_x_continuous(name   = "The total supply per Pipe length (km3/km)", 
-                     limits = c(100, 1300), breaks = seq(100, 1300, 100), expand = c(0, 0)) +
+                     limits = c(100, 1300), breaks = seq(100, 1300, 200), expand = c(0, 0)) +
   scale_y_continuous(name   = "The number of households served per Pipe length (HH/km)", 
                      limits = c(150, 650), breaks = seq(150, 650, 100), expand = c(0, 0)) +
   theme(legend.title         = element_blank(),
         legend.background    = element_rect(fill = "transparent", colour = "transparent"), 
         legend.direction     = "vertical", 
-        legend.justification = c(1, 1), legend.position = c(1, 1))
+        legend.justification = c(1, 1), legend.position = c(1, 1),
+        plot.margin = margin(10, 20, 10, 10))
 
-# Figure 2.2. The total supply and the number of household per employee (800*600)
+# Figure 3. The total supply and the number of household per employee (800*600)
 ggplot(df.avg, aes(x = SP/EP, y = HH/EP, color = Loc, label = name))  + 
   geom_point(aes(size = IU)) + scale_size(guide = "none") + 
   geom_text(vjust = 1.5, show.legend = F) + theme_bw() + 
@@ -69,18 +71,14 @@ ggplot(df.avg, aes(x = SP/EP, y = HH/EP, color = Loc, label = name))  +
   theme(legend.title         = element_blank(),
         legend.background    = element_rect(fill = "transparent", colour = "transparent"), 
         legend.direction     = "vertical", 
-        legend.justification = c(1, 1), legend.position = c(1, 1))
+        legend.justification = c(1, 1), legend.position = c(1, 1),
+        plot.margin = margin(10, 20, 10, 10))
 
 # Stats: % changes per year 
-aggregate((((df.3d[,-6, 10] - df.3d[,-6, 1])/df.3d[,-6, 1])*100)/9, list(loc), mean)
+aggregate((((df.3d[,-6, 11] - df.3d[,-6, 1])/df.3d[,-6, 1])*100)/10, list(loc), mean)
 
-# DF long
-df.all <- data.frame(Year  = rep(f.t, each = nrow(df.3d)),
-                     apply(df.3d, 2, c),
-                     Loc   = rep(loc, 11))
-
-# Figure 3.1. Changes of pipe length and the number of employee from 2007 to 2016 (800*600)
-ggplot(df.all, aes(x = EP, y = PP, color = Loc)) + 
+# Figure 4. Changes of pipe length and the number of employee from 2007 to 2016 (800*600)
+ggplot(df.2d, aes(x = EP, y = PP, color = Location)) + 
   geom_point(aes(alpha = Year), size = 4) + 
   scale_alpha(guide = "none") + theme_bw() +
   scale_x_continuous(name   = "The number of Employee (person)",
@@ -90,10 +88,11 @@ ggplot(df.all, aes(x = EP, y = PP, color = Loc)) +
   theme(legend.title         = element_blank(),
         legend.background    = element_rect(fill = "transparent", colour = "transparent"), 
         legend.direction     = "vertical", 
-        legend.justification = c(1, 0), legend.position = c(1, 0))
+        legend.justification = c(1, 0), legend.position = c(1, 0),
+        plot.margin = margin(10, 20, 10, 10))
 
-# Figure 3.2. Changes of the total supply and the number of households from 2007 to 2016 (800*600)
-ggplot(df.all, aes(x = SP/1000, y = HH/1000, color = Loc)) + 
+# Figure 5. Changes of the total supply and the number of households from 2007 to 2016 (800*600)
+ggplot(df.2d, aes(x = SP/1000, y = HH/1000, color = Location)) + 
   geom_point(aes(alpha = Year), size = 4) + 
   scale_alpha(guide = "none") + theme_bw() +
   scale_x_continuous(name   = "Total supply (1,000*km3)", 
@@ -103,30 +102,31 @@ ggplot(df.all, aes(x = SP/1000, y = HH/1000, color = Loc)) +
   theme(legend.title         = element_blank(),
         legend.background    = element_rect(fill = "transparent", colour = "transparent"), 
         legend.direction     = "vertical", 
-        legend.justification = c(1, 0), legend.position = c(1, 0))
+        legend.justification = c(1, 0), legend.position = c(1, 0),
+        plot.margin = margin(10, 20, 10, 10))
 
 
-###############################################################################################
+#########################################################################################################################
 ### Productivity Analysis
-###############################################################################################
+#########################################################################################################################
 
 # Run SBM each year
-res.sbm <- matrix(NA, nrow(df.3d), 11, dimnames = list(name, f.t))
-for(i in 1:11){res.sbm[, i] <- dm.sbm(df.3d[, id.x, i], df.3d[, id.y, i])$eff}
+res.sbm <- matrix(NA, nrow(df.3d), length(f.t), dimnames = list(name, f.t))
+for(i in 1:length(f.t)){res.sbm[, i] <- dm.sbm(df.3d[, id.x, i], df.3d[, id.y, i])$eff}
 
 # SBM long
-df.sbm.raw <- data.frame(Year = rep(f.t, each = nrow(df.3d)),
+df.sbm.raw <- data.frame(Year = df.2d$Year,
                          DMU  = name,
-                         Loc  = rep(loc, 11),
+                         Loc  = df.2d$Location,
                          Eff  = c(res.sbm))
 
 # SBM averaged
-df.sbm.avg <- data.frame(Year = rep(f.t, each = 3),
-                         Loc  = rep(levels(loc), 11),
+df.sbm.avg <- data.frame(Year = rep(f.t, each = length(unique(loc))),
+                         Loc  = rep(levels(loc), length(f.t)),
                          Eff  = c(apply(res.sbm, 2, 
                                         function(x) aggregate(x, list(loc), mean)$x)))
 
-# Figure 4.1. Prodictivity changes of 33 gas providers (800*600)
+# Figure 6. Prodictivity changes of 33 gas providers (800*600)
 ggplot(data = df.sbm.raw, aes(x = Year, y = Eff, group = Loc, colour = Loc)) + 
   geom_point(alpha = 0.2, size = 1.2) + theme_bw() + 
   geom_line(data = df.sbm.avg, aes(x = Year, y = Eff, group = Loc, colour = Loc), size = 1.2) + 
@@ -141,14 +141,16 @@ ggplot(data = df.sbm.raw, aes(x = Year, y = Eff, group = Loc, colour = Loc)) +
 res.malm.raw <- roc.malmquist(df.3d[,id.x,], df.3d[,id.y,], tm = f.t, dm = "sbm", orientation = "n")
 
 # Summary of results
-res.malm.avg <- data.frame(Period = rep(levels(res.malm.raw$cu$Period), 3),
-                           Loc    = factor(rep(levels(loc), each = 10), levels = levels(loc)),
-                           CU     = aggregate(res.malm.raw$cu$CU, list(res.malm.raw$cu$Period, rep(loc, 10)), mean)$x,
-                           FS     = aggregate(res.malm.raw$fs$FS, list(res.malm.raw$fs$Period, rep(loc, 10)), mean)$x,
-                           MI     = aggregate(res.malm.raw$mi$MI, list(res.malm.raw$mi$Period, rep(loc, 10)), mean)$x)
+res.malm.avg <- data.frame(Period = rep(levels(res.malm.raw$cu$Period), length(unique(loc))),
+                           Loc    = factor(rep(levels(loc), each = length(f.t) - 1), levels = levels(loc)),
+                           CU     = aggregate(res.malm.raw$cu$CU, list(res.malm.raw$cu$Period, rep(loc, length(f.t) - 1)), mean)$x,
+                           FS     = aggregate(res.malm.raw$fs$FS, list(res.malm.raw$fs$Period, rep(loc, length(f.t) - 1)), mean)$x,
+                           MI     = aggregate(res.malm.raw$mi$MI, list(res.malm.raw$mi$Period, rep(loc, length(f.t) - 1)), mean)$x)
 
-# Figure 4.1. CU (800*600)
-ggplot(data = res.malm.raw$cu, aes(x = Period, y = CU, group = rep(loc, 10), colour = rep(loc, 10))) + 
+# Figure 7. CU (800*600)
+ggplot(data = res.malm.raw$cu, 
+       aes(x = Period, y = CU, group = rep(loc, length(f.t) - 1), colour = rep(loc, length(f.t) - 1))) + 
+  geom_hline(yintercept = 1.0, color = "gray", size = 1) +
   geom_point(alpha = 0.2, size = 1.2) + theme_bw() + 
   geom_line(data = res.malm.avg, aes(x = Period, y = CU, group = Loc, colour = Loc), size = 1.2) +
   scale_y_continuous(name = "Technical Efficiency Change (TEC)", limits = c(0.8, 1.3), breaks = seq(0.8, 1.3, 0.1)) +
@@ -157,8 +159,10 @@ ggplot(data = res.malm.raw$cu, aes(x = Period, y = CU, group = rep(loc, 10), col
         legend.direction     = "horizontal", 
         legend.justification = c(1, 1), legend.position = c(1, 1))
 
-# Figure 5.1. FS (800*600)
-ggplot(data = res.malm.raw$fs, aes(x = Period, y = FS, group = rep(loc, 10), colour = rep(loc, 10))) + 
+# Figure 8. FS (800*600)
+ggplot(data = res.malm.raw$fs, 
+       aes(x = Period, y = FS, group = rep(loc, length(f.t) - 1), colour = rep(loc, length(f.t) - 1))) + 
+  geom_hline(yintercept = 1.0, color = "gray", size = 1) +
   geom_point(alpha = 0.2, size = 1.2) + theme_bw() + 
   geom_line(data = res.malm.avg, aes(x = Period, y = FS, group = Loc, colour = Loc), size = 1.2) + 
   scale_y_continuous(name = "Frontier Shift (FS)", limits = c(0.8, 1.3), breaks = seq(0.8, 1.3, 0.1)) +
@@ -168,7 +172,9 @@ ggplot(data = res.malm.raw$fs, aes(x = Period, y = FS, group = rep(loc, 10), col
         legend.justification = c(1, 1), legend.position = c(1, 1))
 
 # Figure 5.1. MI (800*600)
-ggplot(data = res.malm.raw$mi, aes(x = Period, y = MI, group = rep(loc, 10), colour = rep(loc, 10))) + 
+ggplot(data = res.malm.raw$mi, 
+       aes(x = Period, y = MI, group = rep(loc, length(f.t) - 1), colour = rep(loc, length(f.t) - 1))) + 
+  geom_hline(yintercept = 1.0, color = "gray", size = 1) +
   geom_point(alpha = 0.2, size = 1.2) + theme_bw() + 
   geom_line(data = res.malm.avg, aes(x = Period, y = MI, group = Loc, colour = Loc), size = 1.2) + 
   scale_y_continuous(name = "Malmquist Index (MI)", limits = c(0.8, 1.3), breaks = seq(0.8, 1.3, 0.1)) +
@@ -177,10 +183,43 @@ ggplot(data = res.malm.raw$mi, aes(x = Period, y = MI, group = rep(loc, 10), col
         legend.direction     = "horizontal", 
         legend.justification = c(1, 1), legend.position = c(1, 1))
 
+# Table 1. Rationale of MI changes
+SP.2010.2013 <- (df.3d[,4, 7] - df.3d[,4,4])/df.3d[,4,4]*100/3
+SP.2013.2016 <- (df.3d[,4,10] - df.3d[,4,7])/df.3d[,4,7]*100/3
+IU.2010.2013 <- (df.3d[,6, 7] - df.3d[,6,4])/df.3d[,6,4]*100/3
+IU.2013.2016 <- (df.3d[,6,10] - df.3d[,6,7])/df.3d[,6,7]*100/3
+
+t(matrix(c(round(aggregate(IU.2010.2013, list(loc), mean, na.rm = T)$x, 2),
+           round(aggregate(SP.2010.2013, list(loc), mean, na.rm = T)$x, 2),
+           round(aggregate(IU.2013.2016, list(loc), mean, na.rm = T)$x, 2),
+           round(aggregate(SP.2013.2016, list(loc), mean, na.rm = T)$x, 2)),
+         nrow = 3, ncol = 4,
+         dimnames = list(levels(loc), 
+                         c("IU (2010-2013)", "SP (2010-2013)", "IU (2013-2016)", "SP (2013-2016)"))))
+
 # Footnote 6. Regression MI ~ IU
-IU.annual.c <- c(df.3d[,6, 2] - df.3d[,6, 1], df.3d[,6, 3] - df.3d[,6, 2], df.3d[,6, 4] - df.3d[,6,3], 
-                 df.3d[,6, 5] - df.3d[,6, 4], df.3d[,6, 6] - df.3d[,6, 5], df.3d[,6, 7] - df.3d[,6,6],
-                 df.3d[,6, 8] - df.3d[,6, 7], df.3d[,6, 9] - df.3d[,6, 8], df.3d[,6,10] - df.3d[,6,9], 
+IU.annual.c <- c(df.3d[,6, 2] - df.3d[,6, 1], df.3d[,6, 3] - df.3d[,6, 2], df.3d[,6, 4] - df.3d[,6, 3], 
+                 df.3d[,6, 5] - df.3d[,6, 4], df.3d[,6, 6] - df.3d[,6, 5], df.3d[,6, 7] - df.3d[,6, 6],
+                 df.3d[,6, 8] - df.3d[,6, 7], df.3d[,6, 9] - df.3d[,6, 8], df.3d[,6,10] - df.3d[,6, 9], 
                  df.3d[,6,11] - df.3d[,6,10])
 
 summary(lm(res.malm.raw$mi$MI ~ IU.annual.c), na.rm = T)
+
+# Figure 10. LPG vs LNG (vs Oil) prices (850*600)
+p.eff    <- price[-c(1:24, 122:132),]
+df.price <- data.frame(Tick  = rep(1:nrow(p.eff), 3),
+                       Price = c(p.eff$Dubai_oil*10, p.eff$LNG, p.eff$LPG),
+                       Type  = factor(rep(c("Oil", "LNG", "LPG"), each = nrow(p.eff)), levels = c("Oil", "LNG", "LPG")))
+
+ggplot(data = na.omit(df.price), aes(x = Tick, y = Price, group = Type, colour = Type)) + 
+  geom_line(size = 1.2) + theme_bw() + 
+  scale_colour_manual(values = c("lightgrey", "royalblue", "orangered")) +
+  scale_x_continuous(name = "Year", breaks = seq(1, nrow(p.eff) + 1, 12), labels = seq(2010, 2018, 1)) +
+  scale_y_continuous(name = "Gas price (￦/9,393kcal)", limits = c(200, 1400), breaks = seq(200, 1400, 200),
+                     sec.axis = sec_axis(~.*0.1, name = "Oil price - Dubai crude ($/B)", breaks = seq(20, 140, 20))) +
+  theme(axis.title.x         = element_text(size = 14, colour = "gray35"),
+        axis.title.y         = element_text(size = 14, colour = "gray35"),
+        legend.title         = element_blank(),
+        legend.background    = element_rect(fill = "transparent", colour = "transparent"), 
+        legend.direction     = "horizontal", 
+        legend.justification = c(1, 1), legend.position = c(1, 1))
