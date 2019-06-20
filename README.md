@@ -1,4 +1,4 @@
 # TBD.2019.GAS
 Reproduction code for: 
 
-[Author]. "Assessing the productivity change of gas providers in Korea: A slack based intertemporal approach" [Journal] [VOL].[ISSUE] (YEAR): [PAGE].
+[Author]. "The impact of oil price shocks on operational productivity: Evidence from Korean natural gas industry" [Journal] [VOL].[ISSUE] (YEAR): [PAGE].
