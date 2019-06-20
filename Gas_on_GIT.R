@@ -13,14 +13,10 @@ pkgs <- c("ggplot2", "DJL")
 sapply(pkgs, require, character.only = T)
 
 # Load data & parameters
-price <- read.csv(url("http://bit.ly/2AGUUSF"), header = T)
-df.2d <- read.csv(url("http://bit.ly/2VMTUFo"), header = T)
+load("Gas.RData")
 df.3d <- simplify2array(by(df.2d[,-c(1:3)], df.2d$Year, as.matrix))
 id.x  <- 1:3 #  in: pipe & employee & cost
 id.y  <- 4:5 # out: supply & household
-f.t   <- unique(df.2d$Year)
-name  <- df.2d$Name[1:33]
-loc   <- df.2d$Location[1:33]
 
 
 #########################################################################################################################
@@ -32,7 +28,7 @@ df.avg <- data.frame(rowMeans(df.3d[,-6,], dims = 2),
                      IU  = rowMeans(df.3d[,6,])/rowMeans(df.3d[,4,]) * 100,
                      Loc = loc)
 
-# Figure 1. The percentage of industrial supply of 33 Korean city gas providers (900*700)
+# Figure 2. The percentage of industrial supply of 33 Korean city gas providers (900*700)
 ggplot(df.avg, aes(reorder(name, IU), IU, fill = Loc)) + 
   geom_bar(stat = "identity") + theme_bw() + 
   scale_x_discrete(name = NULL, expand = c(0, 0)) +
@@ -46,7 +42,7 @@ ggplot(df.avg, aes(reorder(name, IU), IU, fill = Loc)) +
                 y     = IU, color = Loc), size = 4, 
             position  = position_dodge(width = 0.8), vjust = 0.35, hjust = -0.1) + coord_flip()
 
-# Figure 2. The total supply and the number of household per pipe length (800*600)
+# Figure 3. The total supply and the number of household per pipe length (800*600)
 ggplot(df.avg, aes(x = SP/PP, y = HH/PP, color = Loc, label = name)) + 
   geom_point(aes(size = IU)) + scale_size(guide = "none") + 
   geom_text(vjust = 1.5, show.legend = F) + theme_bw() + 
@@ -60,7 +56,7 @@ ggplot(df.avg, aes(x = SP/PP, y = HH/PP, color = Loc, label = name)) +
         legend.justification = c(1, 1), legend.position = c(1, 1),
         plot.margin = margin(10, 20, 10, 10))
 
-# Figure 3. The total supply and the number of household per employee (800*600)
+# Figure 4. The total supply and the number of household per employee (800*600)
 ggplot(df.avg, aes(x = SP/EP, y = HH/EP, color = Loc, label = name))  + 
   geom_point(aes(size = IU)) + scale_size(guide = "none") + 
   geom_text(vjust = 1.5, show.legend = F) + theme_bw() + 
@@ -76,34 +72,6 @@ ggplot(df.avg, aes(x = SP/EP, y = HH/EP, color = Loc, label = name))  +
 
 # Stats: % changes per year 
 aggregate((((df.3d[,-6, 11] - df.3d[,-6, 1])/df.3d[,-6, 1])*100)/10, list(loc), mean)
-
-# Figure 4. Changes of pipe length and the number of employee from 2007 to 2016 (800*600)
-ggplot(df.2d, aes(x = EP, y = PP, color = Location)) + 
-  geom_point(aes(alpha = Year), size = 4) + 
-  scale_alpha(guide = "none") + theme_bw() +
-  scale_x_continuous(name   = "The number of Employee (person)",
-                     breaks = seq(0, 800, 100)) +
-  scale_y_continuous(name   = "Pipe length (km)",
-                     limits = c(0, 6000), breaks = seq(0, 6000, 1000)) +
-  theme(legend.title         = element_blank(),
-        legend.background    = element_rect(fill = "transparent", colour = "transparent"), 
-        legend.direction     = "vertical", 
-        legend.justification = c(1, 0), legend.position = c(1, 0),
-        plot.margin = margin(10, 20, 10, 10))
-
-# Figure 5. Changes of the total supply and the number of households from 2007 to 2016 (800*600)
-ggplot(df.2d, aes(x = SP/1000, y = HH/1000, color = Location)) + 
-  geom_point(aes(alpha = Year), size = 4) + 
-  scale_alpha(guide = "none") + theme_bw() +
-  scale_x_continuous(name   = "Total supply (1,000*km3)", 
-                     breaks = seq(0, 4000, 500)) +
-  scale_y_continuous(name   = "The number of Household served (thousands)", 
-                     breaks = seq(0, 3000, 500)) +
-  theme(legend.title         = element_blank(),
-        legend.background    = element_rect(fill = "transparent", colour = "transparent"), 
-        legend.direction     = "vertical", 
-        legend.justification = c(1, 0), legend.position = c(1, 0),
-        plot.margin = margin(10, 20, 10, 10))
 
 
 #########################################################################################################################
@@ -126,7 +94,7 @@ df.sbm.avg <- data.frame(Year = rep(f.t, each = length(unique(loc))),
                          Eff  = c(apply(res.sbm, 2, 
                                         function(x) aggregate(x, list(loc), mean)$x)))
 
-# Figure 6. Prodictivity changes of 33 gas providers (800*600)
+# Figure 5. Prodictivity changes of 33 gas providers (800*600)
 ggplot(data = df.sbm.raw, aes(x = Year, y = Eff, group = Loc, colour = Loc)) + 
   geom_point(alpha = 0.2, size = 1.2) + theme_bw() + 
   geom_line(data = df.sbm.avg, aes(x = Year, y = Eff, group = Loc, colour = Loc), size = 1.2) + 
@@ -147,7 +115,7 @@ res.malm.avg <- data.frame(Period = rep(levels(res.malm.raw$cu$Period), length(u
                            FS     = aggregate(res.malm.raw$fs$FS, list(res.malm.raw$fs$Period, rep(loc, length(f.t) - 1)), mean)$x,
                            MI     = aggregate(res.malm.raw$mi$MI, list(res.malm.raw$mi$Period, rep(loc, length(f.t) - 1)), mean)$x)
 
-# Figure 7. CU (800*600)
+# Figure 6. CU (800*600)
 ggplot(data = res.malm.raw$cu, 
        aes(x = Period, y = CU, group = rep(loc, length(f.t) - 1), colour = rep(loc, length(f.t) - 1))) + 
   geom_hline(yintercept = 1.0, color = "gray", size = 1) +
@@ -159,7 +127,7 @@ ggplot(data = res.malm.raw$cu,
         legend.direction     = "horizontal", 
         legend.justification = c(1, 1), legend.position = c(1, 1))
 
-# Figure 8. FS (800*600)
+# Figure 7. FS (800*600)
 ggplot(data = res.malm.raw$fs, 
        aes(x = Period, y = FS, group = rep(loc, length(f.t) - 1), colour = rep(loc, length(f.t) - 1))) + 
   geom_hline(yintercept = 1.0, color = "gray", size = 1) +
@@ -171,7 +139,7 @@ ggplot(data = res.malm.raw$fs,
         legend.direction     = "horizontal", 
         legend.justification = c(1, 1), legend.position = c(1, 1))
 
-# Figure 5.1. MI (800*600)
+# Figure 8. MI (800*600)
 ggplot(data = res.malm.raw$mi, 
        aes(x = Period, y = MI, group = rep(loc, length(f.t) - 1), colour = rep(loc, length(f.t) - 1))) + 
   geom_hline(yintercept = 1.0, color = "gray", size = 1) +
@@ -205,7 +173,7 @@ IU.annual.c <- c(df.3d[,6, 2] - df.3d[,6, 1], df.3d[,6, 3] - df.3d[,6, 2], df.3d
 
 summary(lm(res.malm.raw$mi$MI ~ IU.annual.c), na.rm = T)
 
-# Figure 10. LPG vs LNG (vs Oil) prices (850*600)
+# Figure 9. LPG vs LNG (vs Oil) prices (850*600)
 p.eff    <- price[-c(1:24, 122:132),]
 df.price <- data.frame(Tick  = rep(1:nrow(p.eff), 3),
                        Price = c(p.eff$Dubai_oil*10, p.eff$LNG, p.eff$LPG),
